@@ -9,12 +9,20 @@
     <link rel="stylesheet" type="text/css" media="screen" href="static/css/style.css" />
 </head>
 <body>
-
+    <!-- <div class="main">
+        <canvas id="myCanvas" width="500px" height="500px"></canvas>
+    </div> -->       
 </body>
 <script src="js/jquery.min.js"></script>
-<script src="js/main.js"></script>
 <script src="js/popper.min.js"></script>
 <script src="js/bootstrap.bundle.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/three.js"></script>
+<script src="js/marked.min.js"></script>
+<script src="js/main.js"></script>
+<script>
+$("#md").on("keyup blur",function () {
+        $('#html').html(marked($("#md").val()))
+    })
+</script>
 </html>
