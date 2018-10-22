@@ -7,11 +7,21 @@
     <link rel="stylesheet" type="text/css" media="screen" href="static/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="static/css/font-awesome-4.7.0/css/font-awesome.min.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="static/css/style.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="static/css/index.css" />
 </head>
-<body>
-    <!-- <div class="main">
-        <canvas id="myCanvas" width="500px" height="500px"></canvas>
-    </div> -->       
+<body>   
+    <div class="main" id="wrap">
+        <div class="tool-panel">
+
+        </div>
+        <div class="draw-panel">
+            <canvas id="myCanvas"></canvas>
+        </div>
+        <div class="divide-line"></div>
+        <div class="note-panel">
+            <div class="content"></div>
+        </div>
+    </div>
 </body>
 <script src="js/jquery.min.js"></script>
 <script src="js/popper.min.js"></script>
@@ -19,10 +29,14 @@
 <script src="js/bootstrap.min.js"></script>
 <script src="js/three.js"></script>
 <script src="js/marked.min.js"></script>
+<script src="js/resize.js"></script>
 <script src="js/main.js"></script>
+
 <script>
-$("#md").on("keyup blur",function () {
-        $('#html').html(marked($("#md").val()))
-    })
+    var str = "# 123"
+    $(".note-panel .content").html(marked(str));
+    InitGrid(); //初始化网格
+    Resize();   //面板尺寸变化
+    Draw();
 </script>
 </html>

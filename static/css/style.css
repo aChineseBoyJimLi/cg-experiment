@@ -4,7 +4,10 @@
 }
 
 body{
-    overflow:hidden;
+    width:100vw;
+    height:100vh;
+    min-width:1140px;
+    overflow-y:hidden;
     cursor: crosshair;
 }
 
@@ -13,13 +16,10 @@ li{
 }
 
 .main{
-    width:500px;
-    height:500px;
-    margin:50px auto;
+    width:100%;
+    height:100%;
 }
 
-#myCanvas{
-    /* width:500px;
-    height:500px; */
+/* #myCanvas{
     box-shadow: inset 0 0 1px rgba(25,25,25,0.75);
-}
+} */
