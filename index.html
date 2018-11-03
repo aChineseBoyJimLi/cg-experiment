@@ -23,6 +23,7 @@
         </div>
     </div>
 </body>
+
 <script src="js/jquery.min.js"></script>
 <script src="js/popper.min.js"></script>
 <script src="js/bootstrap.bundle.min.js"></script>
@@ -33,10 +34,12 @@
 <script src="js/main.js"></script>
 
 <script>
+    //markdown 文本部分
     var str = "# 123"
     $(".note-panel .content").html(marked(str));
-    InitGrid(); //初始化网格
-    Resize();   //面板尺寸变化
+    //网格部分
+    InitGrid();
+    // Resize();   //面板尺寸变化
     Draw();
 </script>
 </html>
