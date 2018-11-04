@@ -55,7 +55,7 @@ Grid.prototype = {
             context.closePath();
             context.stroke();  
         }
-    },
+    }
 
 }
 
@@ -65,6 +65,7 @@ Grid.prototype = {
  * x 像素横坐标轴
  * y 像素纵坐标轴
  * FillPixel 填充一个像素点
+ * TransformAxis 将数学坐标转换到canvas坐标
  */
 function Pixel(size,x,y){
     this.pSize = size;
@@ -72,6 +73,13 @@ function Pixel(size,x,y){
     this.pY = y;
 }
 Pixel.prototype = {
+    TransformAxis:function(){
+        var canvasPoint = new Pixel(pixelWidth,this.pX + (canvas.clientWidth/2)/pixelWidth,(canvas.clientHeight/2)/pixelWidth - this.pY);
+        // canvasPoint.pX = this.pX + (canvas.clientWidth/2)/pixelWidth;
+        // canvasPoint.pY = (canvas.clientHeight/2)/pixelWidth - this.pY;
+        // console.log(canvasPoint);
+        return canvasPoint;
+    },
     // fill a pixel on the grid 
     FillPixel:function(color){
         let context = canvas.getContext("2d");
@@ -111,13 +119,7 @@ function Point(x,y){
     this.pY = y;
 }
 
-Point.prototype.TransformAxis = function(){
-    var canvasPoint = new Point;
-    canvasPoint.pX = this.pX + (canvas.clientWidth/2)/pixelWidth;
-    canvasPoint.pY = (canvas.clientHeight/2)/pixelWidth - this.pY;
-    console.log(canvasPoint);
-    return canvasPoint;
-}
+
 
 /**
  * 当画板尺寸变化时
