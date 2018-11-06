@@ -11,35 +11,129 @@
 </head>
 <body>   
     <div class="main" id="wrap">
+        <!-- 工具栏 -->
         <div class="tool-panel">
-
+            <div class="tool" data-toggle="tooltip" data-placement="right" title="绘制直线">
+                <img src="static/images/line.png">
+            </div>
+            <div class="tool" data-toggle="tooltip" data-placement="right" title="绘制圆">
+                <img src="static/images/circle.png">
+            </div>
+            <div class="tool" data-toggle="tooltip" data-placement="right" title="绘制椭圆">
+                <img src="static/images/oval.png">
+            </div>
+            <div class="tool" data-toggle="tooltip" data-placement="right" title="绘制多边形">
+                <img src="static/images/ploycon.png">
+            </div>
+            <div class="tool-divide-line"></div>
+            <div class="tool" data-toggle="tooltip" data-placement="right" title="裁剪面">
+                <img src="static/images/visible.png">
+            </div>
+            <div class="tool" data-toggle="tooltip" data-placement="right" title="设置">
+                <img src="static/images/settings.png">
+            </div>
+            <div class="tool-divide-line"></div>
+            <div class="tool" data-toggle="tooltip" data-placement="right" title="重绘">
+                <img src="static/images/erase.png">
+            </div>
         </div>
+        <!-- 绘图板 -->
         <div class="draw-panel">
+            <canvas id="bgCanvas"></canvas>
+            <canvas id="pCanvas"></canvas>
             <canvas id="myCanvas"></canvas>
         </div>
         <div class="divide-line"></div>
+
+        <!-- 笔记栏 -->
         <div class="note-panel">
             <div class="content"></div>
+        </div>
+
+        <!-- 提示框 -->
+        <div id="tip" class="tip">
+            <div class="main-tip"> 
+            </div>
+        </div>
+        
+        <!-- 设置面板 -->
+
+        <div id="settings-panel">
+            <div class="sub-pannel" id="line-panel">
+                <h5>选择绘制直线的算法：</h5>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" id="DDALine-radio" name="customRadio1" class="custom-control-input" checked="checked">
+                    <label class="custom-control-label" for="DDALine-radio">DDA</label>
+                </div>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" id="Bresenhamline-radio" name="customRadio1" class="custom-control-input">
+                    <label class="custom-control-label" for="Bresenhamline-radio">Bresenham</label>
+                </div>
+                <div class="custom-control custom-radio custom-control-inline1">
+                    <input type="radio" id="Midpoint-radio" name="customRadio1" class="custom-control-input">
+                    <label class="custom-control-label" for="Midpoint-radio">Mid Point</label>
+                </div>
+            </div>
+            <div class="sub-pannel" id="circle-panel">
+                <h5>选择绘制圆的算法：</h5>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" id="Bresenhamcircle-radio" name="customRadio2" class="custom-control-input" checked="checked">
+                    <label class="custom-control-label" for="Bresenhamcircle-radio">Bresenham</label>
+                </div>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" id="MidPoint-radio" name="customRadio2" class="custom-control-input">
+                    <label class="custom-control-label" for="MidPoint-radio">Mid Point</label>
+                </div>
+            </div>
+            <div class="sub-pannel" id="oval-panel">
+                <h5>选择绘制椭圆的算法：</h5>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" id="MidPointOval-radio" name="customRadio3" class="custom-control-input" checked="checked">
+                    <label class="custom-control-label" for="MidPointOval-radio">Mid Point</label>
+                </div>
+            </div>
+            <div class="sub-pannel" id="ploycon-panel">
+                <h5>选择绘制多边形的算法：</h5>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" id="customRadio3" name="customRadio4" class="custom-control-input" checked="checked">
+                    <label class="custom-control-label" for="customRadio3">Mid Point</label>
+                </div>
+            </div>
+            <div class="sub-pannel" class="oval-panel">
+                <h5>选择绘制裁剪的算法：</h5>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" id="customRadio4" name="customRadio5" class="custom-control-input" checked="checked">
+                    <label class="custom-control-label" for="customRadio4">Mid Point</label>
+                </div>
+            </div>
+
+
         </div>
     </div>
 </body>
 
 <script src="js/jquery.min.js"></script>
-<script src="js/popper.min.js"></script>
+<script src="https://unpkg.com/popper.js/dist/umd/popper.min.js"></script>
 <script src="js/bootstrap.bundle.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/three.js"></script>
 <script src="js/marked.min.js"></script>
+<script src="js/script.js"></script>
 <script src="js/resize.js"></script>
 <script src="js/main.js"></script>
+<script src="js/drawboard.js"></script>
+
 
 <script>
-    //markdown 文本部分
-    var str = "# 123";
-    $(".note-panel .content").html(marked(str));
-    //网格部分
-    InitGrid();
-    // Resize();   //面板尺寸变化
-    Draw();
+    !function(){
+        //markdown 文本部分
+        // var str = "# 123";
+        // $(".note-panel .content").html(marked(str));
+        //网格部分
+        InitGrid();
+        // Resize();   //面板尺寸变化
+        // Draw();
+        drawBoard.init();
+    }();  
 </script>
 </html>

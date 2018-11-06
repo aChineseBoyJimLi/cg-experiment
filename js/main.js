@@ -1,15 +1,50 @@
-function Draw(){
-    // var p1 = new Point(-5,6);
-    // var p2 = new Point(14,6);
-    // DDALine(p1.pX,p1.pY,p2.pX,p2.pY,"#cccccc");
-    Bresenhamline(-5,10,8,-8,"#cccccc");
-    // MidPointLine(-16,29,10,-30,"#cccccc");
-    // CirclePoint8(4,2,0,0,"#cccccc");
-    // MidPointCircle(-2,6,8,"#cccccc");
-    // BresenhamCircle(-6,9,12,"#cccccc");
-    
-    // MiddlePointOval(6,-6,16,9,"#cccccc");
+//pCanvas 用于填充像素的canvas
+var pCanvas = document.getElementById('pCanvas');
+pCanvas.width = bgCanvas.parentElement.clientWidth;
+pCanvas.height = bgCanvas.parentElement.clientHeight;
+
+function ClearPCanvs(){
+    pCanvas.getContext("2d").clearRect(0, 0, pCanvas.width, pCanvas.height)
 }
+
+/**
+ * Pixel 构造函数，用于绘制像素点
+ * size 像素大小
+ * x 像素横坐标轴
+ * y 像素纵坐标轴
+ * FillPixel 填充一个像素点
+ * TransformAxis 将数学坐标转换到bgCanvas坐标
+ * TransformBackAxis 将bgCanvas坐标转换到数学坐标
+ */
+
+function Pixel(size,x,y){
+    this.pSize = size;
+    this.pX = x;
+    this.pY = y;
+}
+Pixel.prototype = {
+    TransformAxis:function(){
+        var bgCanvasPoint = new Pixel(pixelWidth,this.pX + (pCanvas.clientWidth/2)/pixelWidth,(pCanvas.clientHeight/2)/pixelWidth - this.pY);
+        // bgCanvasPoint.pX = this.pX + (bgCanvas.clientWidth/2)/pixelWidth;
+        // bgCanvasPoint.pY = (bgCanvas.clientHeight/2)/pixelWidth - this.pY;
+        // console.log(bgCanvasPoint);
+        return bgCanvasPoint;
+    },
+    TransformBackAxis:function(){
+        var CanvasPoint = new Pixel(pixelWidth,this.pX - (pCanvas.clientWidth/2)/pixelWidth,(pCanvas.clientHeight/2)/pixelWidth - this.pY);
+        return CanvasPoint;
+    },
+    // fill a pixel on the grid 
+    FillPixel:function(color){
+        let context = pCanvas.getContext("2d");
+        context.fillStyle = color;
+        context.beginPath();
+        context.fillRect(this.pX*this.pSize, this.pY*this.pSize, this.pSize, this.pSize);
+        context.closePath();
+        context.fill();
+    }
+}
+
 
 /**
  * 画点
@@ -400,7 +435,7 @@ function MiddlePointOval(x0,y0,a,b,color){
     var tx = x;
 
     var d1 = t2bbx * (x-1) + tbb / 2 + t2aa * (1-tbb);
-    while(t2bb * tx > t2aa * y){
+    while(t2bb * tx > t2aa * y){    
         CirclePoint4(x,y,x0,y0,color);
         if(d1<0){
             y += 1;
@@ -413,8 +448,9 @@ function MiddlePointOval(x0,y0,a,b,color){
             d1 = d1 - t4bb * x + t4aa * y + t2aa;
             tx = x;
         }
+        
     }
-
+    
     var d2 = t2bb * (x*x + 1) - t4bb * x + t2aa * (y * y + y - tbb) + taa / 2;
     while(x>=0){
         CirclePoint4(x,y,x0,y0,color);
@@ -428,6 +464,7 @@ function MiddlePointOval(x0,y0,a,b,color){
             d2 = d2 - t4bb * x + t2bb;
         }
     }
+    
 }
 
 /**
@@ -454,4 +491,11 @@ function CirclePoint4(x,y,x0,y0,color){
     DrawPixel(x+x0,-y+y0,color);
     DrawPixel(-x+x0,y+y0,color);
     DrawPixel(-x+x0,-y+y0,color);
+}
+
+/**
+ * 程序暂停函数，同步阻塞执行
+ */
+function Sleep(ms){
+    for(var t = Date.now();Date.now() - t <= ms;);
 }
