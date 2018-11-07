@@ -145,7 +145,44 @@ var drawBoard = {
         }
     },
 
-    
+    //画多边形
+    DrawPolygon:function(){
+        myCanvas.onclick = function(ev){
+            var ev = ev || event;
+            var sx = ev.clientX - drawBoard.gloaObj.ToolW; 
+            var sy = ev.clientY;
+            var n = drawBoard.gloaObj.DATA.length;
+
+            myCanvas.onmousemove = function(ev){
+                var ev = ev || event;
+                var ex = ev.clientX - drawBoard.gloaObj.ToolW;
+                var ey = ev.clientY;
+
+                // var cx = ex - sx;
+                // var cy = ey - sy;
+
+                drawBoard.gloaObj.DATA[n] = new Object();
+                drawBoard.gloaObj.DATA[n].attr = 'polygon';
+                drawBoard.gloaObj.DATA[n].x = cx / 2 + sx;    //椭圆圆心x
+                drawBoard.gloaObj.DATA[n].y = cy / 2 + sy;    //椭圆圆心y
+                drawBoard.gloaObj.DATA[n].a = Math.abs(cx)/2; //长半轴
+                drawBoard.gloaObj.DATA[n].b = Math.abs(cy)/2; //短半轴
+                drawBoard.gloaObj.DATA[n].c = drawBoard.gloaObj.COLOR;
+
+                drawBoard.Render();
+            }
+            myCanvas.onmouseup = function(){
+                myCanvas.onmousemove = '';
+                let p0X = parseInt(drawBoard.gloaObj.DATA[n].x/pixelWidth);
+                let p0Y = parseInt(drawBoard.gloaObj.DATA[n].y/pixelWidth);
+                let ra = parseInt(drawBoard.gloaObj.DATA[n].a/pixelWidth);
+                let rb = parseInt(drawBoard.gloaObj.DATA[n].b/pixelWidth);
+                var point = new Pixel(pixelWidth,p0X,p0Y);
+                point = point.TransformBackAxis();
+                MiddlePointOval(point.pX,point.pY,ra,rb,drawBoard.gloaObj.DATA[n].c);
+            }
+        }
+    },
 
     //画裁剪面
     DrawRect:function(){
@@ -214,16 +251,16 @@ var drawBoard = {
             that.DrawLine();
         };
         tools[1].onclick = function(){
-            that.ShowTips('画圆，当前算法DDA算法');
+            that.ShowTips('画圆，当前算法：DDA算法');
             that.DrawCircle();
         };
         tools[2].onclick = function(){
-            that.ShowTips('画椭圆，当前算法DDA算法');
+            that.ShowTips('画椭圆，当前算法：DDA算法');
             that.DrawOval();
         };
         tools[3].onclick = function(){
-            that.ShowTips('画多边形，当前算法DDA算法');
-            that.DrawOval();
+            that.ShowTips('画多边形，当前算法：边相关扫描线填充算法');
+            that.DrawPolygon();
         };
         tools[5].onclick = function(){
             that.ShowSettings();

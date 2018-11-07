@@ -3,8 +3,9 @@ var pCanvas = document.getElementById('pCanvas');
 pCanvas.width = bgCanvas.parentElement.clientWidth;
 pCanvas.height = bgCanvas.parentElement.clientHeight;
 
+//清空填充像素画板
 function ClearPCanvs(){
-    pCanvas.getContext("2d").clearRect(0, 0, pCanvas.width, pCanvas.height)
+    pCanvas.getContext("2d").clearRect(0, 0, pCanvas.width, pCanvas.height);
 }
 
 /**
@@ -494,8 +495,257 @@ function CirclePoint4(x,y,x0,y0,color){
 }
 
 /**
- * 程序暂停函数，同步阻塞执行
+ * 边相关的扫描线转换算法
+ * points 多边形的顶点集合
  */
-function Sleep(ms){
-    for(var t = Date.now();Date.now() - t <= ms;);
+function PolygonScanConversion(points,color){
+    // points.forEach(element => {
+    //     DrawPixel(element.pX,element.pY,"#cccccc");
+    // });
+    var net = new NETTable(points);
+    net.init();
+
+    var aet = new AETTable(net,color);
+    aet.init();
+    
+}
+
+/**
+ * 新编表类(NET)
+ * points   多边形的顶点，未做任何操作顶点序列
+ * vertex   多边形的顶点，按y排序后的数组
+ * linklist 纵向扫描线链表，每个节点存储两条数据：每条扫描线的ymin；指向一个桶列
+ * init()     初始化新编表
+ * SortByY()  以多边形的y坐标由小到大排序，采用选择排序算法
+ * InitLinkList() 初始化纵向扫描线链表
+ * FindBucketList() 给定一个扫描线的y值，得到它的新编表桶列
+ * GetYMax() 获得多边形的ymax
+ * GetYMin() 获得多边形的ymin
+ */
+function NETTable(points){
+    this.points = [];
+    this.vertex = [];
+    this.linklist = [];
+    //数组的深拷贝
+    points.forEach(elem => {
+        this.points.push(elem);
+        this.vertex.push(elem);
+    })
+}
+NETTable.prototype = {
+    init:function(){
+        this.SortByY();
+        this.Log();
+        this.InitLinkList();
+    },
+    SortByY:function(){
+        var len = this.vertex.length;
+        var minIndex, temp;
+        for(var i=0;i<len-1;i++){
+            minIndex=i;
+            for(var j=i+1;j<len;j++){
+                if(this.vertex[j].pY<this.vertex[minIndex].pY){
+                    minIndex = j;
+                }
+            }
+            temp = this.vertex[i];
+            this.vertex[i] = this.vertex[minIndex];
+            this.vertex[minIndex] = temp;
+        }
+    },
+    InitLinkList:function(){
+        this.vertex.forEach((elem,index)=>{
+            var scanliney = elem.pY;     //扫描线的y值
+            var listnode = new Object(); //每个节点实例
+            listnode.Y = scanliney;      //设置节点的y值
+            var bucketlist = this.FindBucketList(scanliney); //桶列    
+            listnode.bucketList = bucketlist; //每个节点的桶列
+            this.linklist[index] = listnode;  //将节点压入链表
+        });
+    },
+    FindBucketList:function(lineY){
+        var bucketlist = [];
+        var index;  //在points列中，顶点在扫描线y=lineY上的点的下标
+        var len = this.points.length;
+        for(var i=0;i<len;i++){
+            if(this.points[i].pY == lineY){
+                index = i;
+            }
+        }
+        var pointleft,pointright; //与交点相邻的左右两个点
+        if(index==len-1){
+            pointleft = this.points[index-1];
+            pointright =  this.points[0];
+        }
+        else if(index==0){
+            pointleft = this.points[len-1]
+            pointright =  this.points[index+1];
+        }
+        else{
+            pointleft = this.points[index-1];
+            pointright =  this.points[index+1];
+        }
+        //得到桶列
+        if(pointleft.pY > lineY){
+            var deltax = (pointleft.pX-this.points[index].pX)/(pointleft.pY-lineY);
+            var bucket = new Bucket(lineY,this.points[index].pX,deltax,pointleft.pY,null);
+            bucketlist.push(bucket);
+        }
+        if(pointright.pY > lineY){
+            var deltax = (pointright.pX-this.points[index].pX)/(pointright.pY-lineY);
+            var bucket = new Bucket(lineY,this.points[index].pX,deltax,pointright.pY,null);
+            bucketlist.push(bucket);
+        }
+        //对桶列按deltax的大小进行排序
+        if(bucketlist.length == 2){
+            if(bucketlist[0].ymax > bucketlist[1].ymax){
+                var temp = bucketlist[0];
+                bucketlist[0] = bucketlist[1];
+                bucketlist[1] =temp;
+            }
+            if(bucketlist[0].ymax == bucketlist[1].ymax){
+                if(bucketlist[0].deltax > bucketlist[1].deltax){
+                    temp = bucketlist[0];
+                    bucketlist[0] = bucketlist[1];
+                    bucketlist[1] =temp;
+                }
+            }
+            bucketlist[0].nextBucket = bucketlist[1];
+        }
+        return bucketlist;
+    },
+    GetYMax:function(){
+        var len = this.linklist.length;
+        return this.linklist[len-1].Y;
+    },
+    GetYMin:function(){
+        return this.linklist[0].Y;
+    },
+    Log:function(){
+        console.log(this.points);
+        console.log(this.vertex);
+        console.log(this.linklist);
+    }
+}
+/**
+ * 桶类（Bucket），对应覆盖多边形的每一条边
+ * scanLine 扫描线
+ * x 扫描线与边交点的横坐标
+ * deltax 扫描线递增1，该扫描线与边界交点横坐表增量
+ * ymax 扫描线与边交线的最大纵坐标
+ * nextBucket 下一个桶
+ */
+function Bucket(line,x,deltax,ymax,bucket){
+    this.scanLine = line;
+    this.x = x;
+    this.deltax = deltax;
+    this.ymax = ymax;
+    this.nextBucket = bucket;
+}
+
+/**
+ * 活动编表类（AET）
+ * scanlineY 扫描线的y值
+ * net 该多边形的NET表
+ * aet 由该扫描线得到的活性编表
+ * GetAET() 得到活性编表的算法
+ * FillPolygon() 由活性编表扫描转换得到多边形
+ */
+function AETTable(net,color){
+    this.net = net;
+    this.aet = [];
+    this.color = color;
+}
+AETTable.prototype = {
+    init:function(){
+        this.GetAET();
+        this.Log();
+        // this.FillPolygon();
+    },
+    GetAET:function(){
+        var ymax = this.net.GetYMax();
+        var ymin = this.net.GetYMin();
+        var index = 0; //跟踪当前的数组下标
+        for(var i=ymin;i<ymax;i++){
+
+            var bucketlist = [];
+            if(i == ymin){ //第一条扫描线，直接从net表中取桶
+                this.net.linklist[0].bucketList.forEach(elem=>{
+                    bucketlist.push(elem);
+                })
+            }
+            else{
+                this.aet[index-1].bucketList.forEach(elem=>{ //通过上一条扫描线上的交点求出这一条扫描线上的交点
+                    if(elem.ymax != i){             //如果上一个交点的ymax <= 扫描线的y值，则这个点将被忽略不计
+                        var x = elem.x+elem.deltax; //该扫描线交点的x值是上一个交点的x值减去x的增量
+                        var deltax = elem.deltax;
+                        var ymax = elem.ymax;
+                        var bucket = new Bucket(i,x,deltax,ymax,null);
+                        bucketlist.push(bucket);
+                    } 
+                });
+
+                this.net.linklist.forEach(elem=>{ //NET 在该扫描线上是否有记录点
+                    if(elem.Y == i){
+                        elem.bucketList.forEach(elem=>{
+                            bucketlist.push(elem);
+                        })
+                    }
+                });
+                
+            }
+
+            //排序
+            //使用选择排序为list排序，ymax由小到大，相同ymax，deltax由小到大
+            for(var a=0;a<bucketlist.length;a++){ 
+                var minIndex, temp;
+                minIndex=a;
+                for(var b=a+1;b<bucketlist.length;b++){
+                    if(bucketlist[b].x < bucketlist[minIndex].x){
+                            minIndex = b;
+                    }
+                }
+                temp = bucketlist[a];
+                bucketlist[a] = bucketlist[minIndex];
+                bucketlist[minIndex] = temp;
+            }
+            this.FillPolygon(bucketlist);
+            var aetnode = new Object(); //AET表每个节点的实例
+            aetnode.Y = i;
+            aetnode.bucketList = bucketlist;
+            this.aet.push(aetnode);
+            index++;
+        }
+    },
+    FillPolygon:function(list){
+        for(let i=0; i<list.length; i++){
+            if((i+1)%2 == 0){
+                var left = list[i-1].x + 0.5;
+                var right = list[i].x;
+                var y = list[i].scanLine
+                for(var j=left;j<=right;j++){
+                    DrawPixel(j,y,this.color);
+                }
+            }
+        }
+    },
+    Log:function(){
+        console.log(this.aet);
+    }
+}
+
+function Draw(){
+    // var p1 = new Pixel(pixelWidth,2,7);
+    // var p2 = new Pixel(pixelWidth,5,5);
+    // var p3 = new Pixel(pixelWidth,11,8);
+    // var p4 = new Pixel(pixelWidth,11,3);
+    // var p5 = new Pixel(pixelWidth,5,1);
+    // var p6 = new Pixel(pixelWidth,2,2);
+    var p1 = new Pixel(pixelWidth,-3,8);
+    var p2 = new Pixel(pixelWidth,6,-5);
+    var p3 = new Pixel(pixelWidth,9,4);
+    var p4 = new Pixel(pixelWidth,13,1);
+    var p5 = new Pixel(pixelWidth,15,12);
+    var points = [p1,p2,p3,p4,p5];
+    PolygonScanConversion(points);
 }
