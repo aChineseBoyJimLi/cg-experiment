@@ -23,6 +23,7 @@ var drawBoard = {
 
     //画直线
     DrawLine:function(){
+        
         myCanvas.onmousedown = function(ev){
             var ev = ev || event;
             var sx = ev.clientX - drawBoard.gloaObj.ToolW; 
@@ -142,14 +143,57 @@ var drawBoard = {
                 point = point.TransformBackAxis();
                 MiddlePointOval(point.pX,point.pY,ra,rb,drawBoard.gloaObj.DATA[n].c);
             }
+
+            return false;
         }
     },
 
     //画多边形
     DrawPolygon:function(){
-        myCanvas.onclick = function(ev){
-            var ev = ev || event;
+        
+        var n = drawBoard.gloaObj.DATA.length;
+        drawBoard.gloaObj.DATA[n] = new Object();
+        drawBoard.gloaObj.DATA[n].attr = 'polygon';
+        drawBoard.gloaObj.DATA[n].points = [];
+        drawBoard.gloaObj.DATA[n].w = drawBoard.gloaObj.LINE;
+        drawBoard.gloaObj.DATA[n].c = drawBoard.gloaObj.COLOR;
+
+        myCanvas.onmousedown = function(ev){
+            ClearPCanvs(); //调用main.js中的清空函数
+            var ev = ev || event; 
             var sx = ev.clientX - drawBoard.gloaObj.ToolW; 
+            var sy = ev.clientY;
+            var p1 = new Pixel(pixelWidth,sx,sy);
+            drawBoard.gloaObj.DATA[n].points.push(p1); 
+            drawBoard.Render();
+
+            if(drawBoard.gloaObj.DATA[n].points.length > 2){
+                var points = [];
+                drawBoard.gloaObj.DATA[n].points.forEach(element => {
+                    var point = new Pixel(pixelWidth, element.pX, element.pY);
+                    point.pX = parseInt(point.pX / pixelWidth);
+                    point.pY = parseInt(point.pY / pixelWidth);
+                    point = point.TransformBackAxis();
+                    // console.log(point);
+                    points.push(point);
+                    console.log(points);
+                });
+                PolygonScanConversion(points,"#cccccc");
+            }
+            myCanvas.onmouseup = function(){
+                return;
+            }
+
+            return false;
+        }
+        
+    },
+
+    //画裁剪面
+    DrawRect:function(){
+        myCanvas.onmousedown = function(ev){
+            var ev = ev || event;
+            var sx = ev.clientX - drawBoard.gloaObj.ToolW;  
             var sy = ev.clientY;
             var n = drawBoard.gloaObj.DATA.length;
 
@@ -158,35 +202,48 @@ var drawBoard = {
                 var ex = ev.clientX - drawBoard.gloaObj.ToolW;
                 var ey = ev.clientY;
 
-                // var cx = ex - sx;
-                // var cy = ey - sy;
+                var cx = ex - sx;
+                var cy = ey - sy;
 
                 drawBoard.gloaObj.DATA[n] = new Object();
-                drawBoard.gloaObj.DATA[n].attr = 'polygon';
-                drawBoard.gloaObj.DATA[n].x = cx / 2 + sx;    //椭圆圆心x
-                drawBoard.gloaObj.DATA[n].y = cy / 2 + sy;    //椭圆圆心y
-                drawBoard.gloaObj.DATA[n].a = Math.abs(cx)/2; //长半轴
-                drawBoard.gloaObj.DATA[n].b = Math.abs(cy)/2; //短半轴
+                drawBoard.gloaObj.DATA[n].attr = 'rect';
+                drawBoard.gloaObj.DATA[n].x = sx;
+                drawBoard.gloaObj.DATA[n].y = sy;
+                drawBoard.gloaObj.DATA[n].w = cx;
+                drawBoard.gloaObj.DATA[n].h = cy;
                 drawBoard.gloaObj.DATA[n].c = drawBoard.gloaObj.COLOR;
 
                 drawBoard.Render();
             }
-            myCanvas.onmouseup = function(){
-                myCanvas.onmousemove = '';
-                let p0X = parseInt(drawBoard.gloaObj.DATA[n].x/pixelWidth);
-                let p0Y = parseInt(drawBoard.gloaObj.DATA[n].y/pixelWidth);
-                let ra = parseInt(drawBoard.gloaObj.DATA[n].a/pixelWidth);
-                let rb = parseInt(drawBoard.gloaObj.DATA[n].b/pixelWidth);
-                var point = new Pixel(pixelWidth,p0X,p0Y);
-                point = point.TransformBackAxis();
-                MiddlePointOval(point.pX,point.pY,ra,rb,drawBoard.gloaObj.DATA[n].c);
-            }
-        }
-    },
 
-    //画裁剪面
-    DrawRect:function(){
-        
+            document.onmouseup = function(){
+                myCanvas.onmousemove = '';
+                let xmin,xmax,ymin,ymax;
+                xmin = drawBoard.gloaObj.DATA[n].x;
+                xmax = drawBoard.gloaObj.DATA[n].x + drawBoard.gloaObj.DATA[n].w;
+                ymin = drawBoard.gloaObj.DATA[n].y;
+                ymax = drawBoard.gloaObj.DATA[n].y + drawBoard.gloaObj.DATA[n].h;
+                var pmax = new Pixel(pixelWidth,xmax/pixelWidth,ymax/pixelWidth);
+                var pmin = new Pixel(pixelWidth,xmin/pixelWidth,ymin/pixelWidth);
+                pmax = pmax.TransformBackAxis();
+                pmin = pmin.TransformBackAxis();
+                if(pmax.pX < pmin.pX){
+                    var tmp = pmax.pX;
+                    pmax.pX = pmin.pX;
+                    pmin.pX = tmp;
+                }
+                if(pmax.pY < pmin.pY){
+                    var tmp = pmax.pY;
+                    pmax.pY = pmin.pY;
+                    pmin.pY = tmp;
+                }
+                console.log(pmin.pX);
+                var clip = new Clip(pmin.pX,pmax.pX,pmin.pY,pmax.pY);
+                clip.init();
+            }
+
+            return false;
+        }
     },
 
     //重绘画板
@@ -238,6 +295,36 @@ var drawBoard = {
                     drawBoard.gloaObj.CTX.strokeStyle = drawBoard.gloaObj.DATA[i].c;
                     drawBoard.gloaObj.CTX.stroke();
                     break;
+                
+                case 'polygon':
+                    
+                    var points = drawBoard.gloaObj.DATA[i].points;
+                    var len = points.length;
+                    drawBoard.gloaObj.CTX.beginPath();
+                    if(len > 1){
+                        for(var n=1 ; n<len ;n++){
+                            
+                            drawBoard.gloaObj.CTX.moveTo(points[n-1].pX , points[n-1].pY);
+                            drawBoard.gloaObj.CTX.lineTo(points[n].pX , points[n].pY);
+                            
+                        }
+                    }
+                    //封口
+                    drawBoard.gloaObj.CTX.moveTo(points[len-1].pX,points[len-1].pY);
+                    drawBoard.gloaObj.CTX.lineTo(points[0].pX,points[0].pY);
+                    drawBoard.gloaObj.CTX.closePath();
+                    drawBoard.gloaObj.CTX.strokeStyle = drawBoard.gloaObj.DATA[i].c;
+                    drawBoard.gloaObj.CTX.lineWidth = drawBoard.gloaObj.DATA[i].w;
+                    drawBoard.gloaObj.CTX.stroke();
+                    break;
+
+                case 'rect':
+                    drawBoard.gloaObj.CTX.strokeStyle = drawBoard.gloaObj.DATA[i].c;
+                    drawBoard.gloaObj.CTX.beginPath();
+                    drawBoard.gloaObj.CTX.strokeRect(drawBoard.gloaObj.DATA[i].x, drawBoard.gloaObj.DATA[i].y, drawBoard.gloaObj.DATA[i].w, drawBoard.gloaObj.DATA[i].h);
+                    drawBoard.gloaObj.CTX.closePath();
+                    drawBoard.gloaObj.CTX.stroke();
+                    break;
             }
         }
     },
@@ -260,7 +347,12 @@ var drawBoard = {
         };
         tools[3].onclick = function(){
             that.ShowTips('画多边形，当前算法：边相关扫描线填充算法');
+            that.EraseAll();
             that.DrawPolygon();
+        };
+        tools[4].onclick = function(){
+            that.ShowTips('绘制视窗');
+            that.DrawRect();
         };
         tools[5].onclick = function(){
             that.ShowSettings();
@@ -269,7 +361,6 @@ var drawBoard = {
             that.ShowTips('画板已清空');
             that.EraseAll();
         };
-        
     },
 
     //显示提示框

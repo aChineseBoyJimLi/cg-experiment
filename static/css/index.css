@@ -11,6 +11,7 @@
     height:100%;
     background-color:#111;
     padding:8px;
+    box-shadow: 3px 0px 6px 1px #999;
 }
 
 .tool{
@@ -45,6 +46,7 @@
     height:100%;
     overflow-y: scroll;
     background-color:#eee;
+    box-shadow: inset 0px 0px 3px 2px #999;
 }
 .content{
     padding:40px 30px 40px 30px; 

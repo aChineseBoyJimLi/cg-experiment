@@ -7,9 +7,11 @@ pCanvas.height = bgCanvas.parentElement.clientHeight;
 function ClearPCanvs(){
     pCanvas.getContext("2d").clearRect(0, 0, pCanvas.width, pCanvas.height);
 }
+function ClearPartCanvas(offsetx,offsety,width,height){
+    pCanvas.getContext("2d").clearRect(offsetx, offsety, width, height);
+}
 
-/**
- * Pixel 构造函数，用于绘制像素点
+/** Pixel 构造函数，用于绘制像素点
  * size 像素大小
  * x 像素横坐标轴
  * y 像素纵坐标轴
@@ -47,17 +49,14 @@ Pixel.prototype = {
 }
 
 
-/**
- * 画点
- */
+/**画点*/
 function DrawPixel(x,y,color){
     var pixel = new Pixel(pixelWidth,x,y);
     pixel = pixel.TransformAxis();
     pixel.FillPixel(color);
 }
 
-/**
- * DDA 画线算法
+/** DDA 画线算法
  * int x0 起点x坐标
  * int y0 起点y坐标
  * int x1 终点x坐标
@@ -127,8 +126,7 @@ function DDALine(x0,y0,x1,y1,color){
     }
 }
 
-/**
- * Bresenham 画线算法
+/** Bresenham 画线算法
  * int x0 起点x坐标
  * int y0 起点y坐标
  * int x1 终点x坐标
@@ -218,8 +216,7 @@ function Bresenhamline(x0,y0,x1,y1,color){
     }
 }
 
-/**
- * Mid-Point 画线算法
+/** Mid-Point 画线算法
  * int x0 起点x坐标
  * int y0 起点y坐标
  * int x1 终点x坐标
@@ -351,8 +348,7 @@ function MidPointLine(x0,y0,x1,y1,color){
     }
 }
 
-/**
- * Mid-Point 画圆算法
+/** Mid-Point 画圆算法
  * int x0 圆心坐标
  * int y0 圆心坐标
  * int r  圆半径
@@ -376,8 +372,7 @@ function MidPointCircle(x0,y0,r,color){
     }
 }
 
-/**
- * Bresenham 画圆算法
+/** Bresenham 画圆算法
  */
 function BresenhamCircle(x0,y0,r,color){
     var x,y,delta,delta1,delta2,direction; //int类型
@@ -416,8 +411,7 @@ function BresenhamCircle(x0,y0,r,color){
     }
 }
 
-/**
- * 中点画椭圆
+/** 中点画椭圆
  */
 function MiddlePointOval(x0,y0,a,b,color){
     var x=a;
@@ -468,8 +462,7 @@ function MiddlePointOval(x0,y0,a,b,color){
     
 }
 
-/**
- * 八对称画圆
+/** 八对称画圆
  * x0,y0 关于远点平移的坐标
  */
 function CirclePoint8(x,y,x0,y0,color){
@@ -483,8 +476,7 @@ function CirclePoint8(x,y,x0,y0,color){
     DrawPixel(-y + x0,-x + y0,color); 
 }
 
-/**
- * 四对称画圆 
+/** 四对称画圆 
  * x0,y0 关于远点平移的坐标
  */
 function CirclePoint4(x,y,x0,y0,color){
@@ -494,8 +486,7 @@ function CirclePoint4(x,y,x0,y0,color){
     DrawPixel(-x+x0,-y+y0,color);
 }
 
-/**
- * 边相关的扫描线转换算法
+/** 边相关的扫描线转换算法
  * points 多边形的顶点集合
  */
 function PolygonScanConversion(points,color){
@@ -510,8 +501,7 @@ function PolygonScanConversion(points,color){
     
 }
 
-/**
- * 新编表类(NET)
+/** 新编表类(NET)
  * points   多边形的顶点，未做任何操作顶点序列
  * vertex   多边形的顶点，按y排序后的数组
  * linklist 纵向扫描线链表，每个节点存储两条数据：每条扫描线的ymin；指向一个桶列
@@ -535,7 +525,7 @@ function NETTable(points){
 NETTable.prototype = {
     init:function(){
         this.SortByY();
-        this.Log();
+        // this.Log();
         this.InitLinkList();
     },
     SortByY:function(){
@@ -627,8 +617,7 @@ NETTable.prototype = {
         console.log(this.linklist);
     }
 }
-/**
- * 桶类（Bucket），对应覆盖多边形的每一条边
+/** 桶类（Bucket），对应覆盖多边形的每一条边
  * scanLine 扫描线
  * x 扫描线与边交点的横坐标
  * deltax 扫描线递增1，该扫描线与边界交点横坐表增量
@@ -643,8 +632,7 @@ function Bucket(line,x,deltax,ymax,bucket){
     this.nextBucket = bucket;
 }
 
-/**
- * 活动编表类（AET）
+/** 活动编表类（AET）
  * scanlineY 扫描线的y值
  * net 该多边形的NET表
  * aet 由该扫描线得到的活性编表
@@ -659,7 +647,7 @@ function AETTable(net,color){
 AETTable.prototype = {
     init:function(){
         this.GetAET();
-        this.Log();
+        // this.Log();
         // this.FillPolygon();
     },
     GetAET:function(){
@@ -734,6 +722,51 @@ AETTable.prototype = {
     }
 }
 
+
+/** 方形类
+ * TransformAxis() 将数学坐标信息，转换成canvas坐标信息
+ */
+function Rect(xmin,xmax,ymin,ymax){
+    this.xMin = xmin;
+    this.xMax = xmax;
+    this.yMin = ymin;
+    this.yMax = ymax;
+}
+/** 最简便的裁剪算法
+ * 
+ */
+function Clip(xmin,xmax,ymin,ymax){
+    this.xMin = xmin;
+    this.xMax = xmax;
+    this.yMin = ymin;
+    this.yMax = ymax;
+}
+Clip.prototype = {
+    init:function(){
+        var screenWidth = pCanvas.width;
+        var screenHeight = pCanvas.height;
+        // console.log(screenWidth);
+        ClearPartCanvas(0,0,(this.xMin*pixelWidth+screenWidth/2),screenHeight);//清除视窗左边
+        ClearPartCanvas((this.xMax*pixelWidth+screenWidth/2),0,screenWidth-(this.xMax*pixelWidth+screenWidth/2),screenHeight);//清除视窗右边
+        ClearPartCanvas((this.xMin*pixelWidth+screenWidth/2),0,pixelWidth*(this.xMax-this.xMin),(screenHeight/2-this.yMax*pixelWidth));  //清除视图上边
+        ClearPartCanvas((this.xMin*pixelWidth+screenWidth/2),(screenHeight/2-this.yMin*pixelWidth),pixelWidth*(this.xMax-this.xMin),(screenHeight/2+this.yMin*pixelWidth));  //清除视图上边
+        // ClearPCanvs();
+    }
+}
+
+/** Cohen-Sutherland Clip 算法
+ * 
+ */
+function CohenSutherlandClip(xmin,xmax,ymin,ymax,line){
+    this.xMin = xmin;
+    this.xMax = xmax;
+    this.yMin = ymin;
+    this.yMax = ymax;
+}
+CohenSutherlandClip.prototype = {
+
+}
+
 function Draw(){
     // var p1 = new Pixel(pixelWidth,2,7);
     // var p2 = new Pixel(pixelWidth,5,5);
@@ -741,11 +774,14 @@ function Draw(){
     // var p4 = new Pixel(pixelWidth,11,3);
     // var p5 = new Pixel(pixelWidth,5,1);
     // var p6 = new Pixel(pixelWidth,2,2);
-    var p1 = new Pixel(pixelWidth,-3,8);
-    var p2 = new Pixel(pixelWidth,6,-5);
-    var p3 = new Pixel(pixelWidth,9,4);
-    var p4 = new Pixel(pixelWidth,13,1);
-    var p5 = new Pixel(pixelWidth,15,12);
-    var points = [p1,p2,p3,p4,p5];
-    PolygonScanConversion(points);
+    // var p1 = new Pixel(pixelWidth,-3,8);
+    // var p2 = new Pixel(pixelWidth,6,-5);
+    // var p3 = new Pixel(pixelWidth,9,4);
+    // var p4 = new Pixel(pixelWidth,13,1);
+    // var p5 = new Pixel(pixelWidth,15,12);
+    // var points = [p1,p2,p3,p4,p5];
+    // PolygonScanConversion(points);
+    DDALine(-8,-8,8,8,"#cccccc");
+    // var clip = new Clip(-8,8,-4,4);
+    // clip.init();
 }
